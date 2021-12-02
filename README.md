@@ -24,36 +24,28 @@ Dado um problema de minimização linear irrestrito, utilizando o método de Qua
   3. Matplotlib (plot dos gráficos);
 
 
-## Testes realizados
+## Exemplos
 
 - Booth function: x0 = [-10, 10],  x* = [1, 3]
     
     f(x) = (x1+2*x2-7)^2 + (2*x1+x2 -5)^2
-    
-
-- Matyas function: x0 = [-10, 10],  x* = [0, 0]
-    
-    f(x) = 0.26*(x1^2+x2^2)-0.48*x1*x2
-    
-- **Zakharov Function**: x0 = [-5, 10],  x* = [0, 0]
-    
-    f(x) = x1^2 + x2^2 + (0.5*1*x1 + 0.5*2*x2)^2 + (0.5*1*x1 + 0.5*2*x2)^4
-    
-
-- **Three-Hump Camel Function:** x0 = [-5, 5],   x* = [0, 0]
-    
-    f(x) = 2*x1^2 -1.05*x1^4+x1^6/6 + x1*x2+x2^2
-    
+  
+![](/prints/booth1.png)
+![](/prints/booth2.png)
+![](/prints/booth3.png)    
 
 - **Rosenbrock Function**: x0 = [-5, 10],  x* = [1, 1]
     
     f(x) = 100*(x2-x1^2)^2+(x1-1)^2
     
+![](prints/rosenbrock1.png)
+![](prints/rosenbrock2.png)
+![](prints/rosenbrock3.png)
+
 - **Beale Function:** x0 = [-4.5,  4.5],   x* = [3, 0.5]
     
     f(x) = (1.5-x1+x1*x2)^2=(2.25-x1+x1*x2^2)^2+(2.625-x1+x1*x2^3)^2
     
-
-- **Goldstein-Price Function**:  x0 = [-2, 2],    x* = [0, -1]
-    
-    f(x) = (1 + ((x1 + x2 + 1)^2)*(19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)) * (30 + (2*x1 - 3*x2)^2*(18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2))
+![](prints/beale1.png)
+![](prints/beale2.png)
+![](prints/beale3.png)
