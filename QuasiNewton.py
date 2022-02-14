@@ -1,15 +1,19 @@
 from sympy import *
+from functools import reduce
 import numpy as np
+from scipy.optimize import fmin
 import matplotlib.pyplot as plt
+from scipy.optimize import minimize
+import mpmath as mp
 
-#função para calcular o gradiente de uma função de variáveis simbolicas
+
 def gradiente(fx, symx):
     g = []
     for x in symx:
         g.append(diff(fx, x))
     return(g)
 
-#função para substituir o ponto x0 = (x1, x2, ...) nas coordenadas do gradiente
+
 def subsGrad(gx, symx, x0):
     subsFx = gx[:]
     for i in range(len(subsFx)):
@@ -17,6 +21,7 @@ def subsGrad(gx, symx, x0):
             subsFx[i] = subsFx[i].subs(symx[j], x0[j])
         
     return subsFx
+
 
 def calculaCDFP(vk_temp, rk_temp, hk):
     # ((vk*vk')/(vk'*rk))-((hk*rk*rk'*hk)/(rk'*hk*rk))
@@ -47,10 +52,12 @@ def calculaCDFP(vk_temp, rk_temp, hk):
     #divisão 2ª parte
     parte9 = parte6 / parte8
 
+    #print(parte8)
     #subtração dos dois membros
     CDFP = parte3 - parte9
 
     return CDFP
+
 
 def calculaCBFGS(vk_temp, rk_temp, hk):
     # (1+((rk'*hk*rk)/(rk'*vk)))*((vk*vk')/(vk'*rk))-((vk*rk'*hk + hk*rk*vk')/(rk'*vk))
@@ -102,13 +109,14 @@ def calculaCBFGS(vk_temp, rk_temp, hk):
     
     return BFGS
 
+
 def critParada(gk, funcoes):
     if len(funcoes) < 6:
         elevQuadrado = list(map(lambda x: x ** 2, gk))
         soma = sum(elevQuadrado)
         raiz = sqrt(soma)
 
-        return raiz > 0.001
+        return raiz > 0.0001
     else:
         try:
             Deltaf = max(funcoes) - min(funcoes)
@@ -125,7 +133,7 @@ def critParada(gk, funcoes):
             soma = sum(elevQuadrado)
             raiz = sqrt(soma)
 
-            return raiz > 0.001
+            return raiz > 0.0001
 
 def subsFx(fx, symx, x):
     subsFx = fx
@@ -134,14 +142,16 @@ def subsFx(fx, symx, x):
 
     return subsFx
 
-def QuasiNewton(fx, x, symx, n):
 
+def QuasiNewton(n, symx, fx, a, x):
     fg = gradiente(fx, symx)
+
     hk = np.eye(n)
-    gk = subsGrad(fg,symx, x[0])
+
+    gk = subsGrad(fg,symx, x0)
+
     k = 0
     funcoes = []
-    a = symbols("a")
     while critParada(gk, funcoes):
         X = x[k] - a * np.dot(hk, gk)
         
@@ -152,8 +162,7 @@ def QuasiNewton(fx, x, symx, n):
         try:
             solveAlfa = nroots(DifFdealfa, maxsteps = 10000)
         except:
-            print("\n\nNão foi possível encontrar o ponto ótimo desta função")
-            exit(1)
+            break
 
         alfa = solveAlfa[0]
         
@@ -193,16 +202,19 @@ def QuasiNewton(fx, x, symx, n):
 
         hk = np.copy(H)
 
-    print(f"\n\nQuantidade de execuções: {len(x)}")
+    print(f"Quantidade de execuções: {len(x)}")
     print(f"Ponto ótimo encontrado: {tuple(x[-1])}")
     print(f"A função no ponto: {fx.subs([(symx[0], x[-1][0]), (symx[1], x[-1][1])])}")
 
-def graph3D(fx, x, symx):
-    plt.rcParams['figure.figsize'] = 8, 6
-    plotting.plot3d(fx, title = f"Gráfico da Função: {fx}")
-    
-def graphNivel(fx, x, symx):
-    fig, ax = plt.subplots(figsize=(10, 10))
+
+def plot_funcao(fx):
+    plt.rcParams['figure.figsize'] = 10, 8
+    plotting.plot3d(fx)
+
+
+def plot_busca(x, fx, symx):
+    fig, ax = plt.subplots(figsize=(15, 15))
+
     #curvas de nível
     xvec = np.linspace(-5, int(max(x[:][0])) + 5, 500)
     yvec = np.linspace(-5, int(max(x[:][1])) + 5, 500)
@@ -210,6 +222,9 @@ def graphNivel(fx, x, symx):
 
     funclam = lambdify(symx, fx)
     funcao = funclam(xgraf, ygraf)
+
+    #funcao = 100*(ygraf-xgraf**2)**2+(xgraf-1)**2
+
 
     contornp = ax.contour(xgraf, ygraf, funcao, 100)
     plt.grid()
@@ -241,11 +256,12 @@ def graphNivel(fx, x, symx):
     plt.title("Gráfico de busca - Quasi Newton")
     plt.show()
 
-def graphConvertion(fx, x, symx):
+
+def plot_convergencia(x, symx):
     iteracoes = []
     valores = []
 
-    for i in range(0, len(x)):
+    for i in range(1, len(x)):
         iteracoes.append(i)
         valores.append(fx.subs([(symx[0], x[i][0]), (symx[1], x[i][1])]))
 
@@ -254,32 +270,30 @@ def graphConvertion(fx, x, symx):
     plt.ylabel("F(x)", fontsize = 16)
     plt.title("Gráfico de convergência", fontsize = 16)
     plt.plot(iteracoes, valores)
-    plt.yscale("log")
-    plt.xticks(iteracoes)
     plt.show()
 
-if __name__ == '__main__':
+
+def main():
     n = int(input("Digite quantas variáveis sua função possui: "))
     symx = symbols(f"x(1:{n+1})")
 
     f = str(input("Digite a sua função: "))
     fx = sympify(f, convert_xor=True)
 
+    a = symbols("a")
+
     x0 = list(map(float,input("Digite o seu ponto x0 (ex: 1 2): ").strip().split()))[:n]
 
     x = [x0, ]
 
-    QuasiNewton(fx, x, symx, n)
+    QuasiNewton(n, symx, fx, a, x0, x)
+    
+    plot_funcao(fx)
+
+    plot_busca(x, fx, symx)
+
+    plot_convergencia(x, symx)
 
 
-    resp = str(input("\n\nGostaria de visualizar os gráficos?(sim/nao) "))
-
-
-    if resp in ["sim", "Sim", "SIM", "s", "S"]:
-        graph3D(fx, x, symx)
-
-        graphNivel(fx, x, symx)
-
-        graphConvertion(fx, x, symx)
-
-
+if __name__ == "__main__":
+    main()
